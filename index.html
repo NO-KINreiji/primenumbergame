@@ -77,7 +77,7 @@ button{
   padding:16px;
 }
 
-/* ヘッダー */
+/* 上部 */
 .header{
   display:flex;
   justify-content:space-between;
@@ -184,7 +184,6 @@ tr:nth-child(even){
 
 <div id="home">
   <h1>素数を当てよう</h1>
-
   <button onclick="startGame(100)">初級（1〜100）</button>
   <button onclick="startGame(500)">中級（1〜500）</button>
   <button onclick="startGame(1000)">上級（1〜1000）</button>
@@ -202,9 +201,7 @@ tr:nth-child(even){
 let correct,count,score,max,history,odd=false;
 let startTime, timerInterval, elapsed=0, miss=0;
 let modeLabel="";
-let difficultyMultiplier=1;
 
-/* UI生成 */
 function initGameUI(){
   document.getElementById("game").innerHTML=`
     <div class="header">
@@ -225,7 +222,6 @@ function initGameUI(){
   `;
 }
 
-/* リセット */
 function resetGame(){
   correct=null;
   count=0;
@@ -236,7 +232,6 @@ function resetGame(){
   clearInterval(timerInterval);
 }
 
-/* タイマー */
 function startTimer(){
   startTime = performance.now();
   timerInterval = setInterval(()=>{
@@ -249,7 +244,6 @@ function stopTimer(){
   clearInterval(timerInterval);
 }
 
-/* 素数 */
 function isPrime(n){
   if(n<2)return false;
   for(let i=2;i<=Math.sqrt(n);i++){
@@ -261,7 +255,6 @@ function isPrime(n){
 function rand(max){return Math.floor(Math.random()*max)+1;}
 function randOdd(max){let n;do{n=rand(max);}while(n%2===0);return n;}
 
-/* 問題生成 */
 function generate(){
   let p;
   do{ p = odd?randOdd(max):rand(max);}while(!isPrime(p));
@@ -274,17 +267,9 @@ function generate(){
   return arr.sort(()=>Math.random()-0.5);
 }
 
-/* 開始 */
 function startGame(m){
   max=m;
   odd=document.getElementById("oddMode").checked;
-
-  if(m===100) difficultyMultiplier=1.0;
-  else if(m===500) difficultyMultiplier=1.3;
-  else if(m===1000) difficultyMultiplier=1.6;
-  else if(m===10000) difficultyMultiplier=2.2;
-
-  if(odd) difficultyMultiplier*=1.2;
 
   modeLabel = (odd ? "奇数のみモード" : "通常モード") + ` / 1〜${max}`;
 
@@ -298,7 +283,6 @@ function startGame(m){
   next();
 }
 
-/* 次 */
 function next(){
   if(count>=10){finish();return;}
 
@@ -350,21 +334,16 @@ function next(){
   });
 }
 
-/* 終了 */
 function finish(){
   stopTimer();
 
-  let rate = (1000 / (elapsed + miss*4)) * difficultyMultiplier;
+  // ★ここだけ変更：4 → 6
+  let rate = 1000 / (elapsed + miss*6);
 
   let html=`
   <div class="resultCard">
-
     <div class="modeInfo">${modeLabel}</div>
-
-    <div class="bigRate">
-      レート ${rate.toFixed(2)}
-    </div>
-
+    <div class="bigRate">レート ${rate.toFixed(2)}</div>
     <div class="resultScore">
       時間: ${elapsed.toFixed(3)}秒 / ミス: ${miss}
     </div>
@@ -390,7 +369,6 @@ function finish(){
   document.getElementById("game").innerHTML=html;
 }
 
-/* 戻る */
 function back(){
   resetGame();
   document.getElementById("game").style.display="none";
