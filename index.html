@@ -16,9 +16,18 @@
 
 *{box-sizing:border-box;}
 
-body{
+/* ===== 追加：スクロール完全禁止 ===== */
+html, body{
   margin:0;
   height:100dvh;
+  overflow:hidden;          /* ←これが本体 */
+  position:fixed;
+  width:100%;
+  overscroll-behavior:none; /* iOS/Androidバウンス対策 */
+}
+/* =========================== */
+
+body{
   background:var(--bg);
   color:var(--text);
   font-family:sans-serif;
@@ -195,7 +204,6 @@ let correct,count,score,max,history,odd=false;
 let startTime, timerInterval, elapsed=0, miss=0;
 let modeLabel="";
 
-/* UI */
 function initGameUI(){
   document.getElementById("game").innerHTML=`
     <div class="header">
@@ -216,7 +224,6 @@ function initGameUI(){
   `;
 }
 
-/* リセット */
 function resetGame(){
   correct=null;
   count=0;
@@ -227,7 +234,6 @@ function resetGame(){
   clearInterval(timerInterval);
 }
 
-/* タイマー */
 function startTimer(){
   startTime = performance.now();
   timerInterval = setInterval(()=>{
@@ -240,7 +246,6 @@ function stopTimer(){
   clearInterval(timerInterval);
 }
 
-/* 素数 */
 function isPrime(n){
   if(n<2)return false;
   for(let i=2;i<=Math.sqrt(n);i++){
@@ -264,7 +269,6 @@ function generate(){
   return arr.sort(()=>Math.random()-0.5);
 }
 
-/* 開始 */
 function startGame(m){
   max=m;
   odd=document.getElementById("oddMode").checked;
@@ -281,7 +285,6 @@ function startGame(m){
   next();
 }
 
-/* 次 */
 function next(){
   if(count>=10){finish();return;}
 
@@ -333,7 +336,6 @@ function next(){
   });
 }
 
-/* 終了 */
 function finish(){
   stopTimer();
 
@@ -368,7 +370,6 @@ function finish(){
   document.getElementById("game").innerHTML=html;
 }
 
-/* 戻る */
 function back(){
   resetGame();
   document.getElementById("game").style.display="none";
