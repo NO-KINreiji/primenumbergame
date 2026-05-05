@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>素数当てゲーム</title>
+
+<style>
+:root{
+  --bg:#0f1115;
+  --card:#1a1d24;
+  --text:#ffffff;
+  --ok:#4caf50;
+  --ng:#ff5252;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  height:100dvh;
+  background:var(--bg);
+  color:var(--text);
+  font-family:sans-serif;
+}
+
+/* ホーム */
+#home{
+  height:100dvh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:16px;
+  padding:20px;
+}
+
+h1{
+  text-align:center;
+  font-size:2rem;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  font-size:1.2rem;
+  border:none;
+  border-radius:12px;
+  background:#2a2f3a;
+  color:white;
+}
+
+/* ===== 追加：チェックボックス大きく ===== */
+.oddWrap{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+  font-size:1.2rem;
+}
+
+#oddMode{
+  width:24px;
+  height:24px;
+}
+
+/* ゲーム */
+#game{
+  display:none;
+  height:100dvh;
+  display:flex;
+  flex-direction:column;
+  padding:16px;
+}
+
+/* 上部 */
+.header{
+  display:flex;
+  justify-content:space-between;
+  font-size:1.2rem;
+}
+
+/* 問題 */
+.question{
+  text-align:center;
+  font-size:2rem;
+  margin:10px 0;
+}
+
+/* 選択肢 */
+#choices{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+@media (orientation: landscape) and (min-width:700px){
+  #choices{ flex-direction:row; }
+}
+
+.choice{
+  flex:1;
+  height:90px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2rem;
+  border-radius:14px;
+  background:#2a2f3a;
+}
+
+/* フッター固定 */
+.footer{
+  height:100px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+#result{
+  font-size:1.8rem;
+  height:40px;
+}
+
+.ok{color:var(--ok);}
+.ng{color:var(--ng);}
+
+/* リザルト */
+.resultCard{
+  margin:20px;
+  padding:16px;
+  background:var(--card);
+  border-radius:16px;
+}
+
+.resultTitle{
+  font-size:1.8rem;
+  text-align:center;
+}
+
+.resultScore{
+  text-align:center;
+  font-size:1.4rem;
+  margin-bottom:10px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:6px;
+  border-bottom:1px solid #333;
+  text-align:center;
+}
+
+tr:nth-child(even){
+  background:#16181f;
+}
+</style>
+</head>
+
+<body>
+
+<div id="home">
+  <h1>素数を当てよう</h1>
+  <button onclick="startGame(100)">初級（1〜100）</button>
+  <button onclick="startGame(500)">中級（1〜500）</button>
+  <button onclick="startGame(1000)">上級（1〜1000）</button>
+  <button onclick="startGame(10000)">超上級（1〜10000）</button>
+
+  <!-- 追加 -->
+  <label class="oddWrap">
+    <input type="checkbox" id="oddMode">
+    奇数のみモード
+  </label>
+</div>
+
+<div id="game"></div>
+
+<script>
+let correct,count,score,max,history,odd=false;
+
+/* UI */
+function initGameUI(){
+  document.getElementById("game").innerHTML=`
+    <div class="header">
+      <div id="progress">1 / 10</div>
+      <div id="score">0点</div>
+    </div>
+
+    <div class="question">どれが素数？</div>
+
+    <div id="choices"></div>
+
+    <div class="footer">
+      <div id="result"></div>
+      <button id="next" onclick="next()" style="display:none;">次へ</button>
+    </div>
+  `;
+}
+
+/* リセット */
+function resetGame(){
+  correct=null;
+  count=0;
+  score=0;
+  history=[];
+}
+
+/* 素数 */
+function isPrime(n){
+  if(n<2)return false;
+  for(let i=2;i<=Math.sqrt(n);i++){
+    if(n%i===0)return false;
+  }
+  return true;
+}
+
+/* 乱数 */
+function rand(max){return Math.floor(Math.random()*max)+1;}
+function randOdd(max){
+  let n;
+  do{ n=rand(max); }while(n%2===0);
+  return n;
+}
+
+/* 生成 */
+function generate(){
+  let p;
+  do{ p = odd ? randOdd(max) : rand(max); }while(!isPrime(p));
+
+  let arr=[p];
+
+  while(arr.length<3){
+    let n = odd ? randOdd(max) : rand(max);
+    if(!arr.includes(n) && !isPrime(n)) arr.push(n);
+  }
+
+  return arr.sort(()=>Math.random()-0.5);
+}
+
+/* 開始 */
+function startGame(m){
+  max=m;
+  odd=document.getElementById("oddMode").checked;
+
+  resetGame();
+  initGameUI();
+
+  document.getElementById("home").style.display="none";
+  document.getElementById("game").style.display="flex";
+
+  next();
+}
+
+/* 次 */
+function next(){
+  if(count>=10){finish();return;}
+
+  count++;
+  document.getElementById("progress").textContent=`${count} / 10`;
+  document.getElementById("score").textContent=`${score}点`;
+
+  let nums=generate();
+  correct=nums.find(isPrime);
+
+  let area=document.getElementById("choices");
+  let result=document.getElementById("result");
+
+  area.innerHTML="";
+  result.textContent="";
+  result.className="";
+  document.getElementById("next").style.display="none";
+
+  nums.forEach(n=>{
+    let b=document.createElement("button");
+    b.className="choice";
+    b.textContent=n;
+
+    b.onclick=()=>{
+      let ok=(n===correct);
+
+      if(ok){
+        score++;
+        result.textContent="正解";
+        result.className="ok";
+      }else{
+        result.textContent="不正解";
+        result.className="ng";
+      }
+
+      history.push({
+        q:count,
+        answer:n,
+        correct:correct,
+        result:ok?"○":"×"
+      });
+
+      document.querySelectorAll(".choice").forEach(x=>x.disabled=true);
+      document.getElementById("next").style.display="block";
+    };
+
+    area.appendChild(b);
+  });
+}
+
+/* 終了 */
+function finish(){
+  let html=`
+  <div class="resultCard">
+    <div class="resultTitle">結果</div>
+    <div class="resultScore">${score} / 10</div>
+
+    <table>
+      <tr><th>#</th><th>回答</th><th>正解</th><th>判定</th></tr>
+  `;
+
+  history.forEach(h=>{
+    html+=`
+    <tr>
+      <td>${h.q}</td>
+      <td>${h.answer}</td>
+      <td>${h.correct}</td>
+      <td>${h.result}</td>
+    </tr>`;
+  });
+
+  html+=`</table>
+  <button onclick="back()">ホームへ戻る</button>
+  </div>`;
+
+  document.getElementById("game").innerHTML=html;
+}
+
+/* 戻る */
+function back(){
+  resetGame();
+  document.getElementById("game").style.display="none";
+  document.getElementById("home").style.display="flex";
+}
+</script>
+
+</body>
+</html>
